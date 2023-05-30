@@ -69,9 +69,8 @@ public class LANServer
                     int id = client_count;
                     if (LANUtils.SocketConnected(sender) && data.Contains("Connection Completed"))
                     {
-                        var client_con = new ClientConnection(sender, reciever, id.ToString());
+                        var client_con = new ClientConnection(sender, reciever, (sender.RemoteEndPoint as IPEndPoint).Address.ToString());
                         clients.Add(client_con);
-
                         Thread lstnr = new Thread(new ThreadStart(() => ListenClient(reciever, client_con)));
                         listeners.Add(lstnr);
                         lstnr.Start();

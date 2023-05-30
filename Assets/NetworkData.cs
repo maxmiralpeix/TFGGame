@@ -13,6 +13,7 @@ public class NetworkData : MonoBehaviour
     public GameObject[] TrackedObjects;
 
     public static bool OnLine;
+    public string[] connections;
 
     public void Awake()
     {
@@ -42,7 +43,18 @@ public class NetworkData : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        if(net_mode == NetMode.Host &&
+            Net.server != null &&
+            Net.server.clients != null &&
+            Net.server.clients.Count > 0)
+        {
+            List<string> concts = new List<string>();
+            foreach(ClientConnection cl in Net.server.clients)
+            {
+                concts.Add(cl.identifier);
+            }
+            connections = concts.ToArray();
+        }
     }
 
     public IEnumerator Transmit()
@@ -57,17 +69,19 @@ public class NetworkData : MonoBehaviour
             ProcessStatus ps = new ProcessStatus();
             if (net_mode == NetMode.Host)
             {
+                //GameState.current = new GameState(TrackedObjects);
                 Thread t = new Thread(new ThreadStart(
                     () => NetUtils.NetUpdater(Net, "GSTATE=" + GameState.current.toData(), ps)));
                 t.Start();
             }
             else
             {
-                
+                GameState.current.applyState(TrackedObjects);
+                ps.terminated = true;
             }
             yield return new WaitUntil(() => ps.terminated);
             yield return new WaitForSeconds(0.02f);
-            GameState.current.applyState(NetworkData.shared.TrackedObjects);
+            
         }
         
     }
@@ -100,7 +114,7 @@ public class CRS : RequestSolver
         string[] parts = request.Split("=");
         if (parts[0].Equals("GSTATE"))
         {
-            GameState.current = new GameState(parts[1]);           
+            GameState.current = new GameState(parts[1]);
         }
         
         return "OK";
