@@ -104,13 +104,50 @@ public class LANUtils : MonoBehaviour
         return info;
     }
 
-    public static string EncodeIP(string ip)
+    public static string EncodeIP(string ipAddress)
     {
-        return ip;
+        IPAddress ip;
+
+        if (!IPAddress.TryParse(ipAddress, out ip) || ip.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6)
+        {
+            throw new ArgumentException("Invalid IPv6 address.");
+        }
+
+        byte[] addressBytes = ip.GetAddressBytes();
+
+        string encodedValue = BitConverter.ToString(addressBytes).Replace("-", string.Empty);
+        encodedValue = encodedValue.ToUpper();
+
+        return EncapsulateString(encodedValue);
     }
-    public static string DecodeIP(string ip)
+    public static string DecodeIP(string encodedValue_)
     {
-        return ip;
+        string encodedValue = DecapsulateString(encodedValue_);
+        if (encodedValue.Length != 32)
+        {
+            throw new ArgumentException("Invalid encoded value.");
+        }
+
+        byte[] addressBytes = new byte[16];
+
+        for (int i = 0; i < 16; i++)
+        {
+            addressBytes[i] = Convert.ToByte(encodedValue.Substring(i * 2, 2), 16);
+        }
+
+        IPAddress ip = new IPAddress(addressBytes);
+
+        return ip.ToString();
     }
 
+
+    public static string EncapsulateString(string input)
+    {
+        return input;
+    }
+
+    public static string DecapsulateString(string input)
+    {
+        return input;
+    }
 }

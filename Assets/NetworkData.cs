@@ -31,6 +31,7 @@ public class NetworkData : MonoBehaviour
                 connect = new Thread(new ThreadStart(() => Net.SetUpAsHost(rs)));
                 break;
             default:
+                RemoveRB();
                 rs = new CRS();
                 connect = new Thread(new ThreadStart(
                     () => Net.SetUpAsGest(server_reference, rs)));
@@ -60,6 +61,11 @@ public class NetworkData : MonoBehaviour
     public IEnumerator Transmit()
     {
         yield return new WaitUntil(() => Net.isConnected());
+        if(net_mode == NetMode.Host)
+        {
+            Debug.Log("Public Adress: " + Net.GetEncodedServerIP());
+            Debug.Log("Translated to: " + NetworkManager.DecodeIP(Net.GetEncodedServerIP()));
+        }
         yield return new WaitForSeconds(2f);
         Debug.Log(net_mode.ToString() + " connected.");
 
@@ -69,7 +75,7 @@ public class NetworkData : MonoBehaviour
             ProcessStatus ps = new ProcessStatus();
             if (net_mode == NetMode.Host)
             {
-                //GameState.current = new GameState(TrackedObjects);
+                GameState.current = new GameState(TrackedObjects);
                 Thread t = new Thread(new ThreadStart(
                     () => NetUtils.NetUpdater(Net, "GSTATE=" + GameState.current.toData(), ps)));
                 t.Start();
@@ -80,7 +86,7 @@ public class NetworkData : MonoBehaviour
                 ps.terminated = true;
             }
             yield return new WaitUntil(() => ps.terminated);
-            yield return new WaitForSeconds(0.02f);
+            //yield return new WaitForSeconds(0.05f);
             
         }
         
@@ -89,6 +95,18 @@ public class NetworkData : MonoBehaviour
     private void OnApplicationQuit()
     {
         OnLine = false;
+    }
+
+    private void RemoveRB()
+    {
+        foreach(GameObject obj in TrackedObjects)
+        {
+            Rigidbody rb = null;
+            if (obj.TryGetComponent<Rigidbody>(out rb))
+            {
+                Destroy(rb);
+            }
+        }
     }
 }
 

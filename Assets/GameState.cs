@@ -52,12 +52,20 @@ public class GameState
 
 public class ObjectData
 {   
-    Vector3 pos;
+    Vector3 pos; Vector3 vel; Vector3 rot; Vector3 ang_vel;
     const string FLOATFORMAT = "{0:0.###}";
 
     public ObjectData(GameObject obj)
     {
         pos = obj.transform.position;
+        rot = obj.transform.rotation.eulerAngles;
+
+        Rigidbody rb = null;
+        if(obj.TryGetComponent<Rigidbody>(out rb))
+        {
+            vel = rb.velocity;
+            ang_vel = rb.angularVelocity;
+        } else { vel = Vector3.zero; ang_vel = vel; }
     }
 
     public ObjectData(string data)
@@ -69,6 +77,24 @@ public class ObjectData
             spos[0], CultureInfo.InvariantCulture.NumberFormat),
             float.Parse(spos[1], CultureInfo.InvariantCulture.NumberFormat),
             float.Parse(spos[2], CultureInfo.InvariantCulture.NumberFormat));
+
+        string[] svel = info[1].Split(',');
+        vel = new Vector3(float.Parse(
+            svel[0], CultureInfo.InvariantCulture.NumberFormat),
+            float.Parse(svel[1], CultureInfo.InvariantCulture.NumberFormat),
+            float.Parse(svel[2], CultureInfo.InvariantCulture.NumberFormat));
+
+        string[] srot = info[2].Split(',');
+        rot = new Vector3(float.Parse(
+            srot[0], CultureInfo.InvariantCulture.NumberFormat),
+            float.Parse(srot[1], CultureInfo.InvariantCulture.NumberFormat),
+            float.Parse(srot[2], CultureInfo.InvariantCulture.NumberFormat));
+
+        string[] srot_vel = info[3].Split(',');
+        ang_vel = new Vector3(float.Parse(
+            srot_vel[0], CultureInfo.InvariantCulture.NumberFormat),
+            float.Parse(srot_vel[1], CultureInfo.InvariantCulture.NumberFormat),
+            float.Parse(srot_vel[2], CultureInfo.InvariantCulture.NumberFormat));
     }
 
     public string toData()
@@ -76,11 +102,31 @@ public class ObjectData
         string s = string.Format(FLOATFORMAT, pos.x).Replace(',', '.') + "," 
             + string.Format(FLOATFORMAT, pos.y).Replace(',', '.') + "," 
             + string.Format(FLOATFORMAT, pos.z).Replace(',', '.') + "_";
+       
+        s += string.Format(FLOATFORMAT,  vel.x).Replace(',', '.') + ","
+            + string.Format(FLOATFORMAT, vel.y).Replace(',', '.') + ","
+            + string.Format(FLOATFORMAT, vel.z).Replace(',', '.') + "_";
+
+        s += string.Format(FLOATFORMAT,  rot.x).Replace(',', '.') + ","
+            + string.Format(FLOATFORMAT, rot.y).Replace(',', '.') + ","
+            + string.Format(FLOATFORMAT, rot.z).Replace(',', '.') + "_";
+
+        s += string.Format(FLOATFORMAT,  ang_vel.x).Replace(',', '.') + ","
+            + string.Format(FLOATFORMAT, ang_vel.y).Replace(',', '.') + ","
+            + string.Format(FLOATFORMAT, ang_vel.z).Replace(',', '.') + "_";
         return s;
     }
 
     public void applyDatta(GameObject obj)
     {
         obj.transform.position = pos;
+        obj.transform.rotation = Quaternion.Euler(rot);
+
+        FakeRigidBody frb = null;
+        if (obj.TryGetComponent<FakeRigidBody>(out frb))
+        {
+            frb.velocity = vel;
+            frb.angularVelocity = ang_vel;
+        }
     }
 }

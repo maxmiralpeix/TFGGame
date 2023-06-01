@@ -49,7 +49,7 @@ public class NetworkManager : MonoBehaviour
     public void SetUpAsGest(string reference, RequestSolver rs, ServerReference referenceType = ServerReference.IP)
     {
         mode = NetworkMode.gest;
-        client = new LANClient(reference, rs, referenceType);
+        client = new LANClient(DecodeIP(reference), rs, referenceType);
     }
 
     public bool isConnected()
@@ -131,6 +131,7 @@ public class NetworkManager : MonoBehaviour
 
     public string GetEncodedServerIP()
     {
+        Debug.Log("Server ip: " + server.ip);
         return LANUtils.EncodeIP(server.ip);
     }
     public static string DecodeIP(string ip)
