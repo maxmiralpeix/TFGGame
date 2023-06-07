@@ -8,9 +8,7 @@ public class NetworkData : MonoBehaviour
     public NetworkManager Net;
     public static NetworkData shared;
     public NetMode net_mode;
-    public string server_reference;
-    RequestSolver rs;
-    public GameObject[] TrackedObjects;
+    public string server_reference;    
 
     public static bool OnLine;
     public string[] connections;
@@ -21,23 +19,16 @@ public class NetworkData : MonoBehaviour
     }
 
     void Start()
-    {       
-        Thread connect = null;
-        GameState.current = new GameState(TrackedObjects);
+    {               
         switch (net_mode)
         {           
             case NetMode.Host:
-                rs = new HRS();
-                connect = new Thread(new ThreadStart(() => Net.SetUpAsHost(rs)));
+                GameDirector.currentGame.PrepareHost(this);                
                 break;
             default:
-                RemoveRB();
-                rs = new CRS();
-                connect = new Thread(new ThreadStart(
-                    () => Net.SetUpAsGest(server_reference, rs)));
+                GameDirector.currentGame.PrepareClient(this);              
                 break;
         }
-        connect.Start();
         StartCoroutine(Transmit());
     }
 
@@ -49,6 +40,11 @@ public class NetworkData : MonoBehaviour
             Net.server.clients != null &&
             Net.server.clients.Count > 0)
         {
+            if(Net.server.clients.Count > connections.Length)
+            {
+                string id = Net.server.clients[Net.server.clients.Count - 1].identifier;
+                GameDirector.currentGame.AddClient(id, NetMode.Host);
+            }
             List<string> concts = new List<string>();
             foreach(ClientConnection cl in Net.server.clients)
             {
@@ -75,14 +71,14 @@ public class NetworkData : MonoBehaviour
             ProcessStatus ps = new ProcessStatus();
             if (net_mode == NetMode.Host)
             {
-                GameState.current = new GameState(TrackedObjects);
+                GameDirector.currentGame.SetGameState(this);
                 Thread t = new Thread(new ThreadStart(
-                    () => NetUtils.NetUpdater(Net, "GSTATE=" + GameState.current.toData(), ps)));
+                    () => NetUtils.NetUpdater(Net, "GSTATE=" + GameDirector.currentGame.GameState(this).toData(), ps)));
                 t.Start();
             }
             else
             {
-                GameState.current.applyState(TrackedObjects);
+                GameDirector.currentGame.ApplyGameState(this);
                 ps.terminated = true;
             }
             yield return new WaitUntil(() => ps.terminated);
@@ -96,45 +92,9 @@ public class NetworkData : MonoBehaviour
     {
         OnLine = false;
     }
-
-    private void RemoveRB()
-    {
-        foreach(GameObject obj in TrackedObjects)
-        {
-            Rigidbody rb = null;
-            if (obj.TryGetComponent<Rigidbody>(out rb))
-            {
-                Destroy(rb);
-            }
-        }
-    }
 }
 
 public enum NetMode
 {
     Host, Client
-}
-
-public class HRS : RequestSolver
-{
-    public string GenerateResponse(string request)
-    {
-        Debug.Log("Host recieved: " + request);
-        return "OK";
-    }
-}
-
-public class CRS : RequestSolver
-{
-    public string GenerateResponse(string request)
-    {
-        Debug.Log("Client recieved: " + request);
-        string[] parts = request.Split("=");
-        if (parts[0].Equals("GSTATE"))
-        {
-            GameState.current = new GameState(parts[1]);
-        }
-        
-        return "OK";
-    }
 }

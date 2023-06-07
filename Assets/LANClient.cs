@@ -14,6 +14,9 @@ public class LANClient
     RequestSolver rs;
     public string client_identifier;
 
+    public static string ConnectionID;
+    public static string PublicName = "DefaultName";
+
     public LANClient(string reference, RequestSolver rs, ServerReference referenceType = ServerReference.IP)
     {
         if(referenceType == ServerReference.IP)
@@ -68,7 +71,8 @@ public class LANClient
             Socket client_recv = new Socket(SocketType.Stream, ProtocolType.Tcp);
             IPEndPoint rcv_endpoint = new IPEndPoint(HostDnsEntry.AddressList[0], port);
             client_recv.Connect(rcv_endpoint);
-            client_identifier = LANUtils.SendData("Connection Completed", client_recv); 
+            ConnectionID = (client_recv.LocalEndPoint as IPEndPoint).Address.ToString();
+            client_identifier = LANUtils.SendData("Connection Completed|" + PublicName + "|" + ConnectionID, client_recv); 
             socket_reciver = client_recv;
 
             Thread lstnr = new Thread(new ThreadStart(() => ListenServer(client_recv)));
