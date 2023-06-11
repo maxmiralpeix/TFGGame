@@ -72,7 +72,7 @@ public class LANClient
             IPEndPoint rcv_endpoint = new IPEndPoint(HostDnsEntry.AddressList[0], port);
             client_recv.Connect(rcv_endpoint);
             ConnectionID = (client_recv.LocalEndPoint as IPEndPoint).Address.ToString();
-            client_identifier = LANUtils.SendData("Connection Completed|" + PublicName + "|" + ConnectionID, client_recv); 
+            client_identifier = LANUtils.SendData("Connection Completed;" + PublicName + ";" + ConnectionID, client_recv); 
             socket_reciver = client_recv;
 
             Thread lstnr = new Thread(new ThreadStart(() => ListenServer(client_recv)));

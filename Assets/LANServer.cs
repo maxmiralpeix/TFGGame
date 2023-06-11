@@ -69,8 +69,8 @@ public class LANServer
                     int id = client_count;
                     if (LANUtils.SocketConnected(sender) && data.Contains("Connection Completed"))
                     {
-                        string name = data.Split(':')[1];
-                        string con_id = data.Split(':')[2];
+                        string name = data.Split(';')[1];
+                        string con_id = data.Split(';')[2];
                         var client_con = new ClientConnection(sender, reciever, 
                             con_id + ":" + name);
                         clients.Add(client_con);
